@@ -7,8 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kbops/dashboard_screens/bottom_nav.dart';
 import 'package:kbops/dashboard_screens/terms_and_agreement.dart';
+import 'package:kbops/state_management/user_info_provider.dart';
 import 'package:kbops/utils/firebase.dart';
 import 'package:kbops/sharedpref.dart';
+import 'package:provider/provider.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:twitter_login/twitter_login.dart';
 
@@ -95,11 +97,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.escapeauthority.com%2Freview-south-end-psycho%2Fno-image-found%2F&psig=AOvVaw1adMK6dZj59nfQz22DPm4G&ust=1686408997997000&source=images&cd=vfe&ved=0CBEQjRxqFwoTCMDQqZy5tv8CFQAAAAAdAAAAABAE",
               user.email.toString());
         }
+        Provider.of<UserProvider>(context, listen: false).getUserInfo();
       });
       if (result != null) {
         state = true;
       } //
       if (!isAvailable) {
+        // ignore: use_build_context_synchronously
         showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -190,7 +194,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 user.email.toString());
           }
         });
-
+        log('login with google $name $email');
+        Provider.of<UserProvider>(context, listen: false).getUserInfo();
         if (result != null) {
           state = true;
         } // if result not null we simply call the MaterialpageRoute,
@@ -234,7 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 300,
                     decoration: BoxDecoration(
                         borderRadius:
-                            const BorderRadius.all(Radius.circular(12)),
+                            const BorderRadius.all(Radius.circular(25)),
                         border: Border.all(
                             color: const Color.fromARGB(255, 12, 37, 84))),
                     child: Row(

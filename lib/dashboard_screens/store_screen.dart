@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:kbops/drawer.dart';
+import 'package:provider/provider.dart';
 import 'package:unity_mediation/unity_mediation.dart';
 import 'dart:async';
 
@@ -13,8 +14,11 @@ import 'package:kbops/dashboard_screens/purchase_screen.dart';
 import '../components.dart';
 import '../gallery.dart';
 import '../models/userdata.dart';
+import '../state_management/user_info_provider.dart';
 import '../utils/functions.dart';
 import 'package:flutter_inapp_purchase/flutter_inapp_purchase.dart';
+
+import 'KPointsHistory.dart';
 
 class StoreScreen extends StatefulWidget {
   const StoreScreen({Key? key}) : super(key: key);
@@ -26,20 +30,24 @@ class StoreScreen extends StatefulWidget {
 class _StoreScreenState extends State<StoreScreen>
     with SingleTickerProviderStateMixin {
   var pointsLoading = true;
-  Userinfo? userInfo;
+  // Userinfo? userinfos.userInfo;
 
   var pointsController = TextEditingController();
 
   bool castVote = false;
 
-  Future<void> getUserInfo() async {
-    FirebaseAuth auth = FirebaseAuth.instance;
-    String userid = auth.currentUser!.uid.toString();
-    final collectionRef = FirebaseFirestore.instance.collection('users');
-    final docs = await collectionRef.doc(userid).get();
-    userInfo = Userinfo.fromMap(docs);
-    pointsLoading = false;
-    setState(() {});
+  // Future<void> getUserInfo() async {
+  //   FirebaseAuth auth = FirebaseAuth.instance;
+  //   String userid = auth.currentUser!.uid.toString();
+  //   final collectionRef = FirebaseFirestore.instance.collection('users');
+  //   final docs = await collectionRef.doc(userid).get();
+  //   userinfos.userInfo = Userinfo.fromMap(docs);
+  //   pointsLoading = false;
+  //   setState(() {});
+  // }
+  late UserProvider userinfos;
+  void provier(BuildContext context) {
+    userinfos = Provider.of<UserProvider>(context);
   }
 
   var isLoading = true;
@@ -68,17 +76,17 @@ class _StoreScreenState extends State<StoreScreen>
   bool isAdLoaded2 = true;
   void resetDate() async {
     final res = await fetchDate();
-    if (res['date'] != userInfo!.AdsDate) {
+    if (res['date'] != userinfos.userInfo!.AdsDate) {
       var firebase = FirebaseFirestore.instance;
       final CollectionReference collectionRefUser =
           firebase.collection('users');
 
       await collectionRefUser
-          .doc(userInfo!.UserID)
+          .doc(userinfos.userInfo!.UserID)
           .update({'adsDate': res['date'], 'ads': 0, 'ads2': 0})
           .then((value) => print("success"))
           .onError((error, stackTrace) => print(error));
-      getUserInfo();
+      userinfos.getUserInfo();
     }
   }
 
@@ -87,10 +95,10 @@ class _StoreScreenState extends State<StoreScreen>
     final CollectionReference collectionRefUser = firebase.collection('users');
 
     await collectionRefUser
-        .doc(userInfo!.UserID)
+        .doc(userinfos.userInfo!.UserID)
         .update({
-          'ads': (userInfo?.Ads ?? 0) + 1,
-          // 'ads2': (userInfo?.Ads2 ?? 0) + 1,
+          'ads': (userinfos.userInfo?.Ads ?? 0) + 1,
+          // 'ads2': (userinfos.userInfo?.Ads2 ?? 0) + 1,
           'totalkpoints': FieldValue.increment(3)
         })
         .then((value) => print("success"))
@@ -109,7 +117,7 @@ class _StoreScreenState extends State<StoreScreen>
           'kPointsMethod': 'VideoRewards',
           'kPointsOption': '3 KPoints | Watch Video ADs  ',
           'kPointsValue': 3,
-          'userId': "${userInfo?.UserID}"
+          'userId': "${userinfos.userInfo?.UserID}"
         })
         .then((value) => log("success"))
         .onError((error, stackTrace) => log(error.toString()));
@@ -117,19 +125,20 @@ class _StoreScreenState extends State<StoreScreen>
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text(" [✓] 3 KPoints for watching ADs.")));
     }
-    await getUserInfo();
+
+    userinfos.getUserInfo();
     return true;
   }
 
-  Future<bool> updateUserAds2() async {
+  Future<bool> updateUserAds2(BuildContext cxt) async {
     var firebase = FirebaseFirestore.instance;
     final CollectionReference collectionRefUser = firebase.collection('users');
 
     await collectionRefUser
-        .doc(userInfo!.UserID)
+        .doc(userinfos.userInfo!.UserID)
         .update({
-          //'ads': (userInfo?.Ads ?? 0) + 1,
-          'ads2': (userInfo?.Ads2 ?? 0) + 1,
+          //'ads': (userinfos.userInfo?.Ads ?? 0) + 1,
+          'ads2': (userinfos.userInfo?.Ads2 ?? 0) + 1,
           'totalkpoints': FieldValue.increment(3)
         })
         .then((value) => print("success"))
@@ -148,7 +157,7 @@ class _StoreScreenState extends State<StoreScreen>
           'kPointsMethod': 'VideoRewards',
           'kPointsOption': '3 KPoints | Watch Video ADs  ',
           'kPointsValue': 3,
-          'userId': "${userInfo?.UserID}"
+          'userId': "${userinfos.userInfo?.UserID}"
         })
         .then((value) => print("success"))
         .onError((error, stackTrace) => print(error));
@@ -156,7 +165,7 @@ class _StoreScreenState extends State<StoreScreen>
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text(" [✓] 3 KPoints for watching ADs.")));
     }
-    await getUserInfo();
+    userinfos.getUserInfo();
     return true;
   }
 
@@ -174,10 +183,10 @@ class _StoreScreenState extends State<StoreScreen>
   bool _rewardedAdloaded = false;
 
   void initRewardAds() async {
-    if ((userInfo?.Ads)! < 25) {
+    if ((userinfos.userInfo?.Ads)! < 25) {
       RewardedAd.load(
           adUnitId: 'ca-app-pub-4031621145325255/8345279014',
-          request: AdRequest(),
+          request: const AdRequest(),
           rewardedAdLoadCallback: RewardedAdLoadCallback(
             onAdLoaded: (RewardedAd ad) {
               print('$ad loaded.');
@@ -206,7 +215,7 @@ class _StoreScreenState extends State<StoreScreen>
                 },
                 onAdFailedToShowFullScreenContent:
                     (RewardedAd ad, AdError error) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text(
                           "You already watch the 25 ADs per account, please comeback again tomorrow.")));
                   print('$ad onAdFailedToShowFullScreenContent: $error');
@@ -239,8 +248,8 @@ class _StoreScreenState extends State<StoreScreen>
             },
           ));
     } else {
-      log("${userInfo?.Ads.toString()}");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      log("${userinfos.userInfo?.Ads.toString()}");
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
               "You already watch the 25 ADs per account, please comeback again tomorrow.")));
       // if (mounted)
@@ -254,8 +263,8 @@ class _StoreScreenState extends State<StoreScreen>
   }
 
   // void loadRewardedAd() async {
-  //   //  if ((userInfo?.Ads2)! < 20) {
-  //   log("${userInfo?.Ads2.toString()}");
+  //   //  if ((userinfos.userInfo?.Ads2)! < 20) {
+  //   log("${userinfos.userInfo?.Ads2.toString()}");
   //   setState(() {
   //     _rewardedAdloaded = false;
   //   });
@@ -303,7 +312,7 @@ class _StoreScreenState extends State<StoreScreen>
     final CollectionReference collectionRefUser = firebase.collection('users');
 
     await collectionRefUser
-        .doc(userInfo!.UserID)
+        .doc(userinfos.userInfo!.UserID)
         .update({'totalkpoints': FieldValue.increment(points)})
         .then((value) => print("success"))
         .onError((error, stackTrace) => print(error));
@@ -322,11 +331,11 @@ class _StoreScreenState extends State<StoreScreen>
           'kPointsMethod': 'Purchased KPoints',
           'kPointsOption': '${points} KPoints | Purchased KPoints',
           'kPointsValue': points,
-          'userId': "${userInfo?.UserID}"
+          'userId': "${userinfos.userInfo?.UserID}"
         })
         .then((value) => print("success"))
         .onError((error, stackTrace) => print(error));
-    await getUserInfo();
+    userinfos.getUserInfo();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("[✔︎] ${points} KPoints added to your account.")));
@@ -397,7 +406,7 @@ class _StoreScreenState extends State<StoreScreen>
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('error_in_requestPurhcase $e'),
-          duration: Duration(seconds: 2)));
+          duration: const Duration(seconds: 2)));
     }
   }
 
@@ -462,7 +471,7 @@ class _StoreScreenState extends State<StoreScreen>
     initPlatformState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       //  initUnityMediation();
-      getUserInfo();
+      // userinfos.getUserInfo();
       _getProduct();
       getRedeemsItems();
       if (mounted) {
@@ -496,6 +505,9 @@ class _StoreScreenState extends State<StoreScreen>
 
   @override
   Widget build(BuildContext context) {
+    provier(context);
+    final userProvider = Provider.of<UserProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -509,30 +521,24 @@ class _StoreScreenState extends State<StoreScreen>
                 color: Colors.white,
               ),
             ),
-            Spacer(),
-            !pointsLoading
-                ? Row(
-                    children: [
-                      Text(
-                        "${userInfo?.TotalKPoints ?? 0}",
-                        style: TextStyle(
-                            fontWeight: FontWeight.w400,
-                            fontSize: 18,
-                            color: Colors.white),
-                      ),
-                      SizedBox(
-                        width: 2,
-                      ),
-                      Image.asset(
-                        'images/Heart Voting.png',
-                        height: 30,
-                        width: 30,
-                      ),
-                    ],
-                  )
-                : CircularProgressIndicator(
-                    color: Colors.white,
-                  )
+            const Spacer(),
+            Row(
+              children: [
+                Text(
+                  "${userinfos.userInfo?.TotalKPoints ?? 0}",
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 18,
+                      color: Colors.white),
+                ),
+                const SizedBox(width: 2),
+                Image.asset(
+                  'images/Heart Voting.png',
+                  height: 30,
+                  width: 30,
+                ),
+              ],
+            )
           ],
         ),
       ),
@@ -544,7 +550,7 @@ class _StoreScreenState extends State<StoreScreen>
               children: [
                 Row(
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       width: 10,
                     ),
                     Image.asset(
@@ -553,10 +559,10 @@ class _StoreScreenState extends State<StoreScreen>
                       width: 30,
                       fit: BoxFit.fill,
                     ),
-                    SizedBox(
+                    const SizedBox(
                       width: 5,
                     ),
-                    Text(
+                    const Text(
                       'Free KPoints',
                       style:
                           TextStyle(fontWeight: FontWeight.w400, fontSize: 16),
@@ -594,7 +600,8 @@ class _StoreScreenState extends State<StoreScreen>
                           fontWeight: FontWeight.w400,
                           fontSize: 15),
                     ),
-                    subtitle: Text("View Ads: ${userInfo?.Ads ?? 0}/25",
+                    subtitle: Text(
+                        "View Ads: ${userinfos.userInfo?.Ads ?? 0}/25",
                         style: const TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.w400,
@@ -622,7 +629,7 @@ class _StoreScreenState extends State<StoreScreen>
                 //           setState(() {
                 //             _rewardedAdloaded = true;
                 //           });
-                //           if ((userInfo?.Ads2)! < 20) {
+                //           if ((userinfos.userInfo?.Ads2)! < 20) {
                 //             UnityMediation.showRewardedAd(
                 //               adUnitId: Platform.isIOS
                 //                   ? 'Rewarded_iOS'
@@ -658,7 +665,7 @@ class _StoreScreenState extends State<StoreScreen>
                 //               },
                 //             );
                 //           } else {
-                //             log("-==-=-=-=-=--=-${userInfo?.Ads2.toString()}");
+                //             log("-==-=-=-=-=--=-${userinfos.userInfo?.Ads2.toString()}");
                 //             // if (mounted) {
 
                 //             // }
@@ -691,7 +698,7 @@ class _StoreScreenState extends State<StoreScreen>
                 //           fontWeight: FontWeight.w400,
                 //           fontSize: 15),
                 //     ),
-                //     subtitle: Text("View Ads: ${userInfo?.Ads2 ?? 0}/20",
+                //     subtitle: Text("View Ads: ${userinfos.userInfo?.Ads2 ?? 0}/20",
                 //         style: const TextStyle(
                 //             color: Colors.black,
                 //             fontWeight: FontWeight.w400,
@@ -714,10 +721,10 @@ class _StoreScreenState extends State<StoreScreen>
                 //           ),
                 //   ),
                 // ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Row(
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       width: 10,
                     ),
                     Image.asset(
@@ -726,20 +733,20 @@ class _StoreScreenState extends State<StoreScreen>
                       width: 30,
                       fit: BoxFit.fill,
                     ),
-                    SizedBox(
+                    const SizedBox(
                       width: 5,
                     ),
-                    Text(
+                    const Text(
                       'Purchase KPoints',
                       style:
                           TextStyle(fontWeight: FontWeight.w400, fontSize: 16),
                     ),
                   ],
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
-                Divider(
+                const Divider(
                   thickness: 2,
                 ),
                 Container(
@@ -762,7 +769,7 @@ class _StoreScreenState extends State<StoreScreen>
                                     height: 50,
                                     width: 50,
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 5,
                                   ),
                                   Text(
@@ -770,22 +777,22 @@ class _StoreScreenState extends State<StoreScreen>
                                         .productId
                                         .toString()
                                         .toUpperCase(),
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w500),
                                   ),
-                                  Spacer(),
+                                  const Spacer(),
                                   Container(
                                     height: 33,
                                     width: 120,
                                     child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        side: BorderSide(
+                                        side: const BorderSide(
                                             width: 2, color: Colors.white),
                                         //border width and color
 
-                                        primary:
-                                            Color.fromARGB(255, 196, 38, 64),
+                                        primary: const Color.fromARGB(
+                                            255, 196, 38, 64),
                                         //background color of button
                                         shape: RoundedRectangleBorder(
                                             //to set border radius to button
@@ -802,13 +809,13 @@ class _StoreScreenState extends State<StoreScreen>
                                         Platform.isIOS
                                             ? "${_items[0].currency} ${_items[0].price}"
                                             : "${_items[0].introductoryPrice}",
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12),
                                       ),
                                     ),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 5,
                                   ),
                                 ],
@@ -828,7 +835,7 @@ class _StoreScreenState extends State<StoreScreen>
                                     height: 50,
                                     width: 50,
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 5,
                                   ),
                                   Text(
@@ -836,22 +843,22 @@ class _StoreScreenState extends State<StoreScreen>
                                         .productId
                                         .toString()
                                         .toUpperCase(),
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w500),
                                   ),
-                                  Spacer(),
+                                  const Spacer(),
                                   Container(
                                     height: 33,
                                     width: 120,
                                     child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        side: BorderSide(
+                                        side: const BorderSide(
                                             width: 2, color: Colors.white),
                                         //border width and color
 
-                                        primary:
-                                            Color.fromARGB(255, 196, 38, 64),
+                                        primary: const Color.fromARGB(
+                                            255, 196, 38, 64),
                                         //background color of button
                                         shape: RoundedRectangleBorder(
                                             //to set border radius to button
@@ -865,13 +872,13 @@ class _StoreScreenState extends State<StoreScreen>
                                         Platform.isIOS
                                             ? "${_items[3].currency} ${_items[3].price}"
                                             : "${_items[3].introductoryPrice}",
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12),
                                       ),
                                     ),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 5,
                                   ),
                                 ],
@@ -891,7 +898,7 @@ class _StoreScreenState extends State<StoreScreen>
                                     height: 50,
                                     width: 50,
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 5,
                                   ),
                                   Text(
@@ -899,22 +906,22 @@ class _StoreScreenState extends State<StoreScreen>
                                         .productId
                                         .toString()
                                         .toUpperCase(),
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w500),
                                   ),
-                                  Spacer(),
+                                  const Spacer(),
                                   Container(
                                     height: 33,
                                     width: 120,
                                     child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        side: BorderSide(
+                                        side: const BorderSide(
                                             width: 2, color: Colors.white),
                                         //border width and color
 
-                                        primary:
-                                            Color.fromARGB(255, 196, 38, 64),
+                                        primary: const Color.fromARGB(
+                                            255, 196, 38, 64),
                                         //background color of button
                                         shape: RoundedRectangleBorder(
                                             //to set border radius to button
@@ -928,13 +935,13 @@ class _StoreScreenState extends State<StoreScreen>
                                         Platform.isIOS
                                             ? "${_items[4].currency} ${_items[4].price}"
                                             : "${_items[4].introductoryPrice}",
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12),
                                       ),
                                     ),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 5,
                                   ),
                                 ],
@@ -954,7 +961,7 @@ class _StoreScreenState extends State<StoreScreen>
                                     height: 50,
                                     width: 50,
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 5,
                                   ),
                                   Text(
@@ -962,22 +969,22 @@ class _StoreScreenState extends State<StoreScreen>
                                         .productId
                                         .toString()
                                         .toUpperCase(),
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w500),
                                   ),
-                                  Spacer(),
+                                  const Spacer(),
                                   Container(
                                     height: 33,
                                     width: 120,
                                     child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        side: BorderSide(
+                                        side: const BorderSide(
                                             width: 2, color: Colors.white),
                                         //border width and color
 
-                                        primary:
-                                            Color.fromARGB(255, 196, 38, 64),
+                                        primary: const Color.fromARGB(
+                                            255, 196, 38, 64),
                                         //background color of button
                                         shape: RoundedRectangleBorder(
                                             //to set border radius to button
@@ -991,13 +998,13 @@ class _StoreScreenState extends State<StoreScreen>
                                         Platform.isIOS
                                             ? "${_items[1].currency} ${_items[1].price}"
                                             : "${_items[1].introductoryPrice}",
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12),
                                       ),
                                     ),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 5,
                                   ),
                                 ],
@@ -1013,12 +1020,12 @@ class _StoreScreenState extends State<StoreScreen>
                                 children: [
                                   Image.asset(
                                     // 'images/${_items[2].productId}.png',
-                                    'images/200kpoints.png',
+                                    'images/2100kpoints.png',
                                     fit: BoxFit.fill,
                                     height: 50,
                                     width: 50,
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 5,
                                   ),
                                   Text(
@@ -1026,22 +1033,22 @@ class _StoreScreenState extends State<StoreScreen>
                                         .productId
                                         .toString()
                                         .toUpperCase(),
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w500),
                                   ),
-                                  Spacer(),
+                                  const Spacer(),
                                   Container(
                                     height: 33,
                                     width: 120,
                                     child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        side: BorderSide(
+                                        side: const BorderSide(
                                             width: 2, color: Colors.white),
                                         //border width and color
 
-                                        primary:
-                                            Color.fromARGB(255, 196, 38, 64),
+                                        primary: const Color.fromARGB(
+                                            255, 196, 38, 64),
                                         //background color of button
                                         shape: RoundedRectangleBorder(
                                             //to set border radius to button
@@ -1055,13 +1062,13 @@ class _StoreScreenState extends State<StoreScreen>
                                         Platform.isIOS
                                             ? "${_items[2].currency} ${_items[2].price}"
                                             : "${_items[2].introductoryPrice}",
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12),
                                       ),
                                     ),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 5,
                                   ),
                                 ],
@@ -1069,8 +1076,8 @@ class _StoreScreenState extends State<StoreScreen>
                             ),
                           ],
                         )
-                      : Center(
-                          child: const Text(
+                      : const Center(
+                          child: Text(
                             '\n » Please wait while loading. « \n',
                             style: TextStyle(
                                 fontWeight: FontWeight.w400, fontSize: 15),
@@ -1079,15 +1086,28 @@ class _StoreScreenState extends State<StoreScreen>
 
                   // CircularProgressIndicator(color: Color.fromARGB(255, 218, 74, 84),))
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
-                Divider(
+                const Divider(
                   thickness: 2,
                 ),
+                // ListTile(
+                //   leading: Image.asset(
+                //     'images/exchange.png',
+                //     height: 25,
+                //     width: 25,
+                //     fit: BoxFit.fill,
+                //   ),
+                //   title: const Text(
+                //     'Exchange KPoints',
+                //     style: TextStyle(fontWeight: FontWeight.w400, fontSize: 17),
+                //   ),
+                //   contentPadding: EdgeInsets.zero,
+                // ),
                 Row(
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       width: 10,
                     ),
                     Image.asset(
@@ -1106,9 +1126,7 @@ class _StoreScreenState extends State<StoreScreen>
                     ),
                   ],
                 ),
-                const SizedBox(
-                  height: 5,
-                ),
+
                 const Divider(
                   thickness: 2,
                 ),
@@ -1129,9 +1147,9 @@ class _StoreScreenState extends State<StoreScreen>
                               return Column(
                                 children: [
                                   Container(
-                                    decoration: BoxDecoration(
+                                    decoration: const BoxDecoration(
                                         color: Colors.white,
-                                        borderRadius: const BorderRadius.all(
+                                        borderRadius: BorderRadius.all(
                                             Radius.circular(10))),
                                     child: Row(
                                       children: [
@@ -1151,20 +1169,20 @@ class _StoreScreenState extends State<StoreScreen>
                                             maxLines: 2,
                                           ),
                                         ),
-                                        Spacer(),
+                                        const Spacer(),
                                         Container(
-                                          margin: EdgeInsets.symmetric(
+                                          margin: const EdgeInsets.symmetric(
                                               vertical: 10),
                                           height: 33,
                                           width: 100,
                                           child: ElevatedButton(
                                             style: ElevatedButton.styleFrom(
-                                              side: BorderSide(
+                                              side: const BorderSide(
                                                   width: 2,
                                                   color: Colors.black12),
                                               //border width and color
 
-                                              primary: Color.fromARGB(
+                                              primary: const Color.fromARGB(
                                                   255, 196, 38, 64),
                                               //background color of button
                                               shape: RoundedRectangleBorder(
@@ -1176,7 +1194,8 @@ class _StoreScreenState extends State<StoreScreen>
                                             onPressed: () {
                                               if (exchangeList[i]
                                                       .RedeemItemKPoints! <=
-                                                  (userInfo?.TotalKPoints ??
+                                                  (userinfos.userInfo
+                                                          ?.TotalKPoints ??
                                                       0)) {
                                                 setState(() {
                                                   itemName = exchangeList[i]
@@ -1211,18 +1230,50 @@ class _StoreScreenState extends State<StoreScreen>
                                             ),
                                           ),
                                         ),
-                                        SizedBox(
+                                        const SizedBox(
                                           width: 10,
                                         )
                                       ],
                                     ),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     height: 10,
                                   ),
                                 ],
                               );
                             })),
+                const Divider(thickness: 2),
+
+                // const SizedBox(
+                //   height: 5,
+                // ),
+                Consumer<UserProvider>(builder: (context, userProvider, child) {
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => KPointsHistory(
+                                  userinfo: userProvider.userInfo)));
+                    },
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(0),
+                      // leading: Image.asset(
+                      //   'images/exchange.png',
+                      //   height: 25,
+                      //   width: 25,
+                      //   fit: BoxFit.fill,
+                      // ),
+                      leading: const Text(
+                        'KPoints History →',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w400, fontSize: 16),
+                      ),
+                      trailing: Icon(Icons.navigate_next),
+                    ),
+                  );
+                }),
+                const Divider(thickness: 2),
               ],
             ),
           ),
@@ -1237,7 +1288,7 @@ class _StoreScreenState extends State<StoreScreen>
                     child: Container(
                       height: 200,
                       width: MediaQuery.of(context).size.width * .9,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(20)),
                         color: Color.fromARGB(255, 196, 38, 64),
                       ),
@@ -1246,7 +1297,7 @@ class _StoreScreenState extends State<StoreScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(
+                            const SizedBox(
                               height: 10,
                             ),
                             Container(
@@ -1304,11 +1355,11 @@ class _StoreScreenState extends State<StoreScreen>
                                             ],
                                           ),
                                         ),
-                                        Spacer(),
+                                        const Spacer(),
                                         ElevatedButton(
                                           style: ElevatedButton.styleFrom(
-                                            minimumSize: Size(120, 38),
-                                            maximumSize: Size(120, 38),
+                                            minimumSize: const Size(120, 38),
+                                            maximumSize: const Size(120, 38),
 
                                             primary: Colors.black45,
                                             //background color of button//border width and color
@@ -1329,7 +1380,7 @@ class _StoreScreenState extends State<StoreScreen>
                                             setState(() {
                                               pointsLoading = true;
                                             });
-                                            await getUserInfo();
+                                            userinfos.getUserInfo();
                                             if (mounted) {
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(SnackBar(
@@ -1344,7 +1395,7 @@ class _StoreScreenState extends State<StoreScreen>
                                               state = false;
                                             });
                                           },
-                                          child: Text(
+                                          child: const Text(
                                             "Redeem »",
                                             style: TextStyle(
                                                 fontWeight: FontWeight.w700,
@@ -1390,7 +1441,7 @@ class _StoreScreenState extends State<StoreScreen>
     final CollectionReference collectionRefUser = firbase.collection('users');
 
     await collectionRefUser
-        .doc(userInfo!.UserID)
+        .doc(userinfos.userInfo!.UserID)
         .update({'totalkpoints': FieldValue.increment(-itemPoints)})
         .then((value) => print("succes"))
         .onError((error, stackTrace) => print(error));
@@ -1401,7 +1452,7 @@ class _StoreScreenState extends State<StoreScreen>
           'redeemKHistoryId': id.toString(),
           'redeemDate': FieldValue.serverTimestamp(),
           'redeemId': itemId,
-          'userId': userInfo?.UserID,
+          'userId': userinfos.userInfo?.UserID,
           'redeemItemName': itemName,
           'redeemItemKPoints': itemPoints
         })
@@ -1422,7 +1473,7 @@ class _StoreScreenState extends State<StoreScreen>
           'kPointsMethod': 'Redeem',
           'kPointsOption': 'Redeemed » ${itemPoints} | ${itemName}  ',
           'kPointsValue': itemPoints,
-          'userId': "${userInfo?.UserID}"
+          'userId': "${userinfos.userInfo?.UserID}"
         })
         .then((value) => print("success"))
         .onError((error, stackTrace) => print(error));

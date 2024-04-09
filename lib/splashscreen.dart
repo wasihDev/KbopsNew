@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:kbops/dashboard_screens/bottom_nav.dart';
 import 'package:kbops/loginscreen.dart';
 import 'package:kbops/sharedpref.dart';
+import 'package:kbops/state_management/user_info_provider.dart';
+import 'package:kbops/state_management/vote_now_provider.dart';
+import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -37,18 +40,29 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-  //  final newVersion = NewVersion(androidId: "com.snapchat.android");
-  //   const simpleBehavior = true;
-  //   if (simpleBehavior) {
-  //     basicStatusCheck(newVersion);
-  //     // ignore: dead_code
-  //   } else {
-  //     advancedStatusCheck(newVersion);
-  //   }
-    splashNavigator();
+
+    //  final newVersion = NewVersion(androidId: "com.snapchat.android");
+    //   const simpleBehavior = true;
+    //   if (simpleBehavior) {
+    //     basicStatusCheck(newVersion);
+    //     // ignore: dead_code
+    //   } else {
+    //     advancedStatusCheck(newVersion);
+    //   }
+    // splashNavigator();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       splashNavigator();
+      // Provider.of<VoteNowProvider>(context, listen: false).getData();
     });
+    // WidgetsBinding.instance.addPostFrameCallback((_) async {
+    // });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   Provider.of<UserProvider>(context, listen: false).getUserData();
+    // });
+
+    // WidgetsBinding.instance.addPostFrameCallback((_) async {
+    //   await Provider.of<VoteNowProvider>(context, listen: false).fetchDate();
+    // });
   }
 
   @override
@@ -68,6 +82,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final result = await checkLogin();
     if (FirebaseAuth.instance.currentUser != null && result) {
       Timer(const Duration(seconds: 2), () {
+        Provider.of<UserProvider>(context, listen: false).getUserInfo();
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (_) => BottomNav()));
       });

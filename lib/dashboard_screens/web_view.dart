@@ -12,14 +12,13 @@ import 'package:flutter/services.dart';
 import 'package:kbops/dashboard_screens/website.dart';
 import 'package:kbops/image_docs.dart';
 import 'package:kbops/models/userdata.dart';
+import 'package:kbops/state_management/user_info_provider.dart';
+import 'package:kbops/state_management/vote_now_provider.dart';
 import 'package:kbops/vote_screens/widgets/my_drawer.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 // import 'package:twitter_login/entity/user.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-
-import '../drawer.dart';
-import '../gallery.dart';
-import 'fanproject.dart';
 
 class WebViewExample extends StatefulWidget {
   @override
@@ -31,20 +30,6 @@ class WebViewExampleState extends State<WebViewExample> {
 
   final Completer<WebViewController> _controllerCompleter =
       Completer<WebViewController>();
-
-  @override
-  void initState() {
-    super.initState();
-    Userinfo? userInfo;
-    // getitemCount();
-    // _tabController2 = TabController(length: 2, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await getUserInfo();
-      await getImages2();
-
-      if (mounted) setState(() {});
-    });
-  }
 
   Future<void> likeOrUnlikeImage({
     required String docId,
@@ -79,15 +64,15 @@ class WebViewExampleState extends State<WebViewExample> {
     }
   }
 
-  Future<void> getUserInfo() async {
-    FirebaseAuth auth = FirebaseAuth.instance;
-    String userid = auth.currentUser!.uid.toString();
-    final collectionRef = FirebaseFirestore.instance.collection('users');
-    final docs = await collectionRef.doc(userid).get();
-    userInfo = Userinfo.fromMap(docs);
-    //  pointsLoading = false;
-    if (mounted) setState(() {});
-  }
+  // Future<void> getUserInfo() async {
+  //   FirebaseAuth auth = FirebaseAuth.instance;
+  //   String userid = auth.currentUser!.uid.toString();
+  //   final collectionRef = FirebaseFirestore.instance.collection('users');
+  //   final docs = await collectionRef.doc(userid).get();
+  //   userInfo = Userinfo.fromMap(docs);
+  //   //  pointsLoading = false;
+  //   if (mounted) setState(() {});
+  // }
 
   final RefreshController _refreshController =
       RefreshController(initialRefresh: true);
@@ -148,6 +133,14 @@ class WebViewExampleState extends State<WebViewExample> {
     }
   }
 
+  // Future<void>? userProviders;
+  UserProvider? userProvider;
+  @override
+  void didChangeDependencies() {
+    userProvider = Provider.of<UserProvider>(context, listen: false);
+    super.didChangeDependencies();
+  }
+
   EventsInfo? eventsInfo;
   Userinfo? userinfo;
 
@@ -155,9 +148,36 @@ class WebViewExampleState extends State<WebViewExample> {
   int itemCount = 0;
   List<dynamic> likedBy = List.empty(growable: true);
   bool iscomment = false;
-  Userinfo? userInfo;
+  // Userinfo? userInfo;
+  // @override
+  // void dispose() {
+  //   // userProvider!.dispose();
+  //   super.dispose();
+  // }
+
+  @override
+  void initState() {
+    super.initState();
+    // Userinfo? userInfo;
+    // getitemCount();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      userProvider?.getUserInfo();
+      await getImages2();
+
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    // final userProvider = Provider.of<UserProvider>(context);
+    // userProvider.getUserInfo();
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   Provider.of<UserProvider>(context, listen: false).getUserInfo();
+    // });
     return WillPopScope(
       onWillPop: () => _goBack(context),
       child: Scaffold(

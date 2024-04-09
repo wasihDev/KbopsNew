@@ -6,8 +6,11 @@ import 'package:kbops/dashboard_screens/store_screen.dart';
 import 'package:kbops/vote_screens/screens/vote_now.dart';
 import 'package:kbops/vote_screens/screens/vote_screen.dart';
 import 'package:kbops/dashboard_screens/web_view.dart';
+import 'package:provider/provider.dart';
 import '../components.dart';
 import '../notificationservice/local_notification_service.dart';
+import '../state_management/user_info_provider.dart';
+import '../state_management/vote_now_provider.dart';
 import 'mission_daily_reward.dart';
 
 class BottomNav extends StatefulWidget {

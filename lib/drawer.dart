@@ -418,13 +418,15 @@ class _LastestState extends State<Lastest> {
                                                   });
                                                 },
                                                 child: Icon(Icons.favorite,
-                                                    color: documentSnapshot[
-                                                                index]
-                                                            .exists
-                                                        ? Color.fromARGB(
-                                                            255, 222, 156, 63)
-                                                        : Color.fromARGB(
-                                                            255, 31, 30, 30)),
+                                                    color:
+                                                        documentSnapshot[index]
+                                                                .exists
+                                                            ? Colors.red[900]
+                                                            : Color.fromARGB(
+                                                                255,
+                                                                31,
+                                                                30,
+                                                                30)),
                                               ),
                                               SizedBox(width: 5),
                                               Text(image.likes.toString())

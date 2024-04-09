@@ -16,13 +16,13 @@ class MyDrawer extends StatefulWidget {
 }
 
 class _MyDrawerState extends State<MyDrawer> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<UserProvider>(context, listen: false).getUserInfo();
-    });
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     Provider.of<UserProvider>(context, listen: false).getUserInfo();
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -37,27 +37,25 @@ class _MyDrawerState extends State<MyDrawer> {
               decoration: const BoxDecoration(
                 color: Color.fromARGB(255, 198, 37, 65),
               ),
-              child: userProvider.pointsLoading
-                  ? Text('Loading...')
-                  : Column(
-                      children: [
-                        const SizedBox(height: 70),
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundImage: NetworkImage(userProvider
-                                  .userInfo?.UserImage ??
-                              "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png"),
-                        ),
-                        const SizedBox(height: 15),
-                        Text(
-                          userProvider.userInfo?.Username ?? "",
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 17,
-                              color: Colors.white),
-                        ),
-                      ],
-                    )),
+              child: Column(
+                children: [
+                  const SizedBox(height: 70),
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundImage: NetworkImage(userProvider
+                            .userInfo?.UserImage ??
+                        "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png"),
+                  ),
+                  const SizedBox(height: 15),
+                  Text(
+                    userProvider.userInfo?.Username ?? "",
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 17,
+                        color: Colors.white),
+                  ),
+                ],
+              )),
           InkWell(
             onTap: () {
               Navigator.push(context,

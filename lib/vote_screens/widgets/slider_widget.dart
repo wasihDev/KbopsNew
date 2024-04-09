@@ -1,13 +1,16 @@
 import 'package:banner_carousel/banner_carousel.dart';
 import 'package:flutter/material.dart';
 
+import '../../models/anony.dart';
+
 class SilderWidget extends StatelessWidget {
   const SilderWidget({
     super.key,
     required this.imgList,
   });
 
-  final List<BannerModel> imgList;
+  final List<BannerModels> imgList;
+  // CarouselController buttonCarouselController = CarouselController();
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +18,7 @@ class SilderWidget extends StatelessWidget {
       height: MediaQuery.of(context).size.height * 0.24,
       child: BannerCarousel.fullScreen(
         borderRadius: 10,
-        banners: imgList,
+        // banners: imgList,
         height: MediaQuery.of(context).size.height * 0.3,
         initialPage: 0,
         customizedIndicators: const IndicatorModel.animation(

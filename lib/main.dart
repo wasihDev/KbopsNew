@@ -3,12 +3,17 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:kbops/state_management/comment_state_provider.dart';
 import 'package:kbops/state_management/event_provider.dart';
 import 'package:kbops/state_management/user_info_provider.dart';
 import 'package:kbops/splashscreen.dart';
+import 'package:kbops/state_management/user_list.dart';
 import 'package:kbops/state_management/vote_screen_provider.dart';
+import 'package:kbops/state_management/web_view_expension.dart';
+import 'package:kbops/state_management/weekly_participant.dart';
 import 'package:provider/provider.dart';
 
+import 'dashboard_screens/profile.dart';
 import 'state_management/vote_now_provider.dart';
 
 List<String> testDeviceIds = ['289C....E6'];
@@ -53,7 +58,13 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => VoteNowProvider()),
         ChangeNotifierProvider(create: (context) => VoteScreenProvider()),
         ChangeNotifierProvider(create: (context) => UserProvider()),
-        ChangeNotifierProvider(create: (context) => EventsProvider())
+        ChangeNotifierProvider(create: (context) => EventsProvider()),
+        ChangeNotifierProvider(create: (context) => WebViewLoadingProvider()),
+        ChangeNotifierProvider(create: (context) => CommentProvider()),
+        ChangeNotifierProvider(create: (context) => WebViewProvider()),
+        ChangeNotifierProvider(create: (context) => UserListProvider()),
+        ChangeNotifierProvider(
+            create: (context) => WeeklyParticipantsProvider())
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
